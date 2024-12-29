@@ -1,0 +1,21 @@
+# Используем базовый образ Airflow
+FROM apache/airflow:2.7.1
+
+# Устанавливаем зависимости Python для работы с Kafka и Spark
+RUN pip install kafka-python pyspark
+
+# Устанавливаем Java, который нужен для работы Spark
+USER root
+RUN apt-get update && apt-get install -y openjdk-11-jdk wget ca-certificates && apt-get clean
+
+# Устанавливаем переменные окружения для Java
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV PATH="$JAVA_HOME/bin:$PATH"
+
+# Устанавливаем Kafka-коннекторы для Spark
+RUN mkdir -p /opt/spark/jars/ \
+    && wget --no-check-certificate https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.12/3.4.3/spark-sql-kafka-0-10_2.12-3.4.3.jar -P /opt/spark/jars/ \
+    && wget --no-check-certificate https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/2.8.1/kafka-clients-2.8.1.jar -P /opt/spark/jars/ \
+    && wget --no-check-certificate https://repo1.maven.org/maven2/org/apache/spark/spark-streaming-kafka-0-10_2.12/3.4.3/spark-streaming-kafka-0-10_2.12-3.4.3.jar -P /opt/spark/jars/
+
+USER airflow
